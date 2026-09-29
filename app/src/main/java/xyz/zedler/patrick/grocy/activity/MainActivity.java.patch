@@ -1,0 +1,30 @@
+// Add these changes to MainActivity.java onCreate() method:
+// Replace the old server/API initialization code with:
+
+    // OFFLINE MODE - Initialize local database instead of connecting to server
+    OfflineModeUtil.initializeOfflineModeIfNeeded(sharedPrefs);
+    
+    // Skip network initialization for offline mode
+    // netUtil.createWebSocketClient(); // DISABLED FOR OFFLINE MODE
+    
+    // Initialize local database with default data if empty
+    AppDatabase localDb = AppDatabase.getAppDatabase(this);
+    DatabaseInitializer.initializeIfEmpty(localDb);
+    
+    // Remove: updateGrocyApi(); // Not needed in offline mode
+    // The app will use LocalDataHelper instead for all data operations
+
+// In NavUtil.updateStartDestination(), replace the server check with:
+
+  public void updateStartDestination() {
+    NavInflater navInflater = navController.getNavInflater();
+    NavGraph graph = navInflater.inflate(R.navigation.navigation_main);
+    boolean introShown = sharedPrefs.getBoolean(Constants.PREF.INTRO_SHOWN, false);
+    if (!introShown) {
+      graph.setStartDestination(R.id.onboardingFragment);
+    } else {
+      // In offline mode, skip login and go straight to main overview
+      graph.setStartDestination(R.id.overviewStartFragment);
+    }
+    navController.setGraph(graph);
+  }
